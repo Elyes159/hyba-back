@@ -49,10 +49,11 @@ const babysitterSchema = new mongoose.Schema({
     heure_fin: {
       type: String, // Ou vous pouvez utiliser le type Date si vous préférez
       
-    }
-   
-    // Ajoutez d'autres attributs comme nécessaire
-  }] // Define rendezVous as an array of rendezVousSchema
+    },
+  }] ,
+  token: {
+    type: String,
+  }// Define rendezVous as an array of rendezVousSchema
 });
 
 const Babysitter = mongoose.model('Babysitter', babysitterSchema);

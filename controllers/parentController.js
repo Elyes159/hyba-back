@@ -12,6 +12,9 @@ exports.createParent = async (req, res) => {
   try {
     const { nom, prenom, email, password, nombreDesEnfants,phone } = req.body;
     const parent = new Parent({ nom, prenom, email, password, nombreDesEnfants,phone });
+    salt = bcrypt.genSaltSync(10);
+    cryptedPass = bcrypt.hashSync(req.body.password, salt)
+    parent.password = cryptedPass;
     await parent.save();
     res.status(201).json(parent);
   } catch (error) {
@@ -52,10 +55,22 @@ exports.login = async (req, res) => {
     if (!parent) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
-    if (parent.password !== password) {
+    else {
+      validPass = bcrypt.compareSync(req.body.password,parent.password)
+    if (!validPass) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }else {
+      payload = {
+        _id: parent.id,
+        email:parent.email,
+        name : parent.name
     }
-    res.json(parent);
+    token = jwt.sign(payload,'123456')
+    parent.token = token;
+    await parent.save();
+    res.status(200).json({mytokenparent:token});
+    }
+  } 
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Une erreur s\'est produite lors de la connexion' });

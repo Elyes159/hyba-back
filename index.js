@@ -17,11 +17,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/hyba', {
   console.error('Erreur de connexion à la base de données MongoDB :', err);
   process.exit(1); 
 });
-
-
 app.use(express.json());
-
-
 app.use('/api/babysitters', babysitterRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/admin', adminRoutes);

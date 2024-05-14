@@ -24,6 +24,9 @@ const parentSchema = new mongoose.Schema({
   },
   phone: {
     type: String
+  },
+  token: {
+    type : String
   }
 });
 

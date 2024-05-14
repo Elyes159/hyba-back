@@ -7,6 +7,9 @@ exports.createBabysitter = async (req, res) => {
   try {
     const { nom, prenom, email, password, phone,description } = req.body;
     const babysitter = new Babysitter({ nom, prenom, email, password, phone,description });
+    salt = bcrypt.genSaltSync(10);
+    cryptedPass = bcrypt.hashSync(req.body.password, salt)
+    babysitter.password = cryptedPass;
     await babysitter.save();
     res.status(201).json({ babysitter });
   } catch (error) {
@@ -20,21 +23,29 @@ exports.loginBabysitter = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const babysitter = await Babysitter.findOne({ email });
+    const babysitter = await Babysitter.findOne({ email : req.body.email });
 
     if (!babysitter) {
-      return res.status(404).json({ message: 'Babysitter not found' });
+      return res.status(404).json({ message: 'Email ou mot de passe incorrect' });
     }
-
-    if (babysitter.password !== password) {
+    else {
+      validPass = bcrypt.compareSync(req.body.password,babysitter.password)
+    if (!validPass) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
-    }
-
-    if (babysitter.accepte !== 'acceptée') {
+    }else if (babysitter.accepte !== 'acceptée') {
       return res.status(401).json({ message: 'Votre compte n\'a pas encore été accepté' });
+    }else {
+      payload = {
+        _id: babysitter.id,
+        email:babysitter.email,
+        name : babysitter.name
     }
-
-    res.status(200).json(babysitter);
+    tokenn = jwt.sign(payload,'123456');
+    babysitter.token = tokenn;
+    await babysitter.save();
+    res.status(200).json({mytoken:tokenn});
+    }
+  } 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
