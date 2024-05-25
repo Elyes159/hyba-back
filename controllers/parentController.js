@@ -33,9 +33,9 @@ exports.getAllParents = async (req, res) => {
 };
 
 
-exports.getParentById = async (req, res) => {
+exports.getParentByToken = async (req, res) => {
   try {
-    const parent = await Parent.findById(req.params.id);
+    const parent = await Parent.findOne({token : req.params.token});
     if (parent) {
       res.status(200).json(parent);
     } else {

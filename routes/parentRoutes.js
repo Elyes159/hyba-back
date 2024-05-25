@@ -11,7 +11,7 @@ router.post('/login', parentController.login);
 router.get('/', parentController.getAllParents);
 
 
-router.get('/:id', parentController.getParentById);
+router.get('/:token', parentController.getParentByToken);
 
 
 

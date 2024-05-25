@@ -2,18 +2,112 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Babysitter = require('../models/babysitter');
 
-
 exports.createBabysitter = async (req, res) => {
   try {
-    const { nom, prenom, email, password, phone,description } = req.body;
-    const babysitter = new Babysitter({ nom, prenom, email, password, phone,description });
-    salt = bcrypt.genSaltSync(10);
-    cryptedPass = bcrypt.hashSync(req.body.password, salt)
-    babysitter.password = cryptedPass;
+    const { nom, prenom, email, password, phone, description } = req.body;
+    const babysitter = new Babysitter({ nom, prenom, email, password, phone, description });
+
+    // Hash the password
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+    babysitter.password = hashedPassword;
+
+    // Check if file is present
+    if (req.file) {
+      babysitter.file.data = req.file.buffer; // Store file as Buffer
+      babysitter.file.contentType = req.file.mimetype; // Store file MIME type
+    }
+
+    // Save the babysitter in the database
     await babysitter.save();
-    res.status(201).json({ babysitter });
+    
+    res.status(201).json({ message: 'Babysitter created successfully.' });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.uploadProfilePic = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send({ message: 'No file uploaded.' });
+    }
+
+    // Assuming you have a user ID to link the profile picture to a babysitter
+    const token = req.body.token;
+    
+    // Vérifiez si le token est vide
+    if (!token) {
+      return res.status(400).send({ message: 'Token is missing.' });
+    }
+
+    const babysitter = await Babysitter.findOne({token:token});
+
+    if (!babysitter) {
+      return res.status(404).send({ message: 'Babysitter not found.' });
+    }
+
+    babysitter.profilePic = {
+      data: req.file.buffer,
+      contentType: req.file.mimetype,
+    };
+
+    await babysitter.save();
+
+    res.status(200).send({ message: 'Profile picture uploaded successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'An error occurred while uploading the profile picture.' });
+  }
+};
+
+
+exports.getProfilePic = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+
+    if (!token) {
+      return res.status(400).send({ message: 'Token is missing.' });
+    }
+
+    const babysitter = await Babysitter.findOne({ token: token });
+
+    if (!babysitter || !babysitter.profilePic) {
+      return res.status(404).send({ message: 'Profile picture not found.' });
+    }
+
+    const profilePicData = babysitter.profilePic.data.toString('base64');
+    const profilePicContentType = babysitter.profilePic.contentType;
+
+    res.status(200).send({ profilePicData, profilePicContentType });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'An error occurred while retrieving the profile picture.' });
+  }
+};
+
+
+exports.getProfilePicById = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const babysitter = await Babysitter.findById(id);
+
+    if (!babysitter) {
+      return res.status(404).send({ message: 'Profile picture not found.' });
+    }
+
+    const profilePicData = babysitter.profilePic.data
+      ? babysitter.profilePic.data.toString('base64')
+      : null;
+    const profilePicContentType = babysitter.profilePic.contentType;
+
+    res.status(200).send({ profilePicData, profilePicContentType });
+  } catch (error) {
+    console.error(error);
+    console.log(error);
+    res.status(500).send({ message: 'An error occurred while retrieving the profile picture.' });
   }
 };
 
@@ -21,7 +115,7 @@ exports.createBabysitter = async (req, res) => {
 
 exports.loginBabysitter = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password , fcmToken} = req.body;
 
     const babysitter = await Babysitter.findOne({ email : req.body.email });
 
@@ -42,6 +136,7 @@ exports.loginBabysitter = async (req, res) => {
     }
     tokenn = jwt.sign(payload,'123456');
     babysitter.token = tokenn;
+    babysitter.fcmToken = req.body.fcmToken;
     await babysitter.save();
     res.status(200).json({mytoken:tokenn});
     }
@@ -81,6 +176,24 @@ exports.getDemandesRefusees = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.getRendezVousByBabysitterToken = async (req, res) => {
+  try {
+    const babysitter = await Babysitter.findOne({token : req.params.token});
+    if (!babysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+    
+    const rendezVous = babysitter.rendezVous;
+    res.status(200).json(rendezVous);
+  } catch (error) {
+    console.error(error);
+    if (error.name === 'CastError') {
+      res.status(400).json({ message: 'Invalid ID format' });
+    } else {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+};
 exports.getRendezVousByBabysitterId = async (req, res) => {
   try {
     const babysitter = await Babysitter.findById(req.params.id);
@@ -99,3 +212,33 @@ exports.getRendezVousByBabysitterId = async (req, res) => {
     }
   }
 };
+
+exports.updateFCMToken = async (req, res) => {
+  try {
+    const { id ,fcmToken} = req.body;
+
+    // Vérifiez si le token est vide
+    if (!id) {
+      return res.status(400).json({ message: 'Token or FCM token is missing.' });
+    }
+
+    // Recherchez le babysitter correspondant au token
+    const babysitter = await Babysitter.findById(id);
+
+    if (!babysitter) {
+      return res.status(404).json({ message: 'Babysitter not found.' });
+    }
+
+    // Associez le FCM token au babysitter
+    babysitter.fcmToken = fcmToken;
+
+    // Enregistrez les modifications dans la base de données
+    await babysitter.save();
+
+    res.status(200).json({ message: 'FCM token updated successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while updating the FCM token.' });
+  }
+};
+

@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
-
-
-
 const babysitterSchema = new mongoose.Schema({
- 
   nom: {
     type: String,
     required: true
@@ -20,7 +16,6 @@ const babysitterSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
   },
   phone: {
     type: String,
@@ -40,20 +35,29 @@ const babysitterSchema = new mongoose.Schema({
     },
     date: {
       type: Date,
-      
     },
     heure_debut: {
-      type: String, // Ou vous pouvez utiliser le type Date si vous préférez
-      
+      type: String, 
     },
     heure_fin: {
-      type: String, // Ou vous pouvez utiliser le type Date si vous préférez
-      
+      type: String, 
     },
-  }] ,
+  }],
+  file: {
+    data: Buffer,
+    contentType: String,
+  },
   token: {
     type: String,
-  }// Define rendezVous as an array of rendezVousSchema
+  },
+  profilePic: {
+    data: Buffer,
+    contentType: String,
+  },
+  fcmToken : {
+    type: String,
+
+  }
 });
 
 const Babysitter = mongoose.model('Babysitter', babysitterSchema);
