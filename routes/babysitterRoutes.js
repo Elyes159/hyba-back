@@ -13,8 +13,11 @@ router.get('/getProfilePic', babysitterController.getProfilePic);
 
 router.post('/getProfilePicById', babysitterController.getProfilePicById);
 
+router.post('/getCVById', babysitterController.getCVById);
 
 
+
+router.put('/accepte-babysitter/:id',babysitterController.acceptBabysitter)
 
 router.post('/login', babysitterController.loginBabysitter);
 
@@ -31,6 +34,8 @@ router.get('/rendezVous/:token',babysitterController.getRendezVousByBabysitterTo
 
 router.get('/rendezVousId/:id',babysitterController.getRendezVousByBabysitterId)
 router.post('/updateFCMToken',babysitterController.updateFCMToken)
+
+router.delete('/Delete/:id',babysitterController.deleteBabysitter)
 
 
 

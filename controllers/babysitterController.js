@@ -61,6 +61,31 @@ exports.uploadProfilePic = async (req, res) => {
     res.status(500).send({ message: 'An error occurred while uploading the profile picture.' });
   }
 };
+exports.acceptBabysitter = async (req, res) => {
+  try {
+    // Extract the babysitter ID from the URL parameters
+    const { id } = req.params;
+
+    // Find the babysitter by ID and update the 'accepte' field to 'acceptée'
+    const updatedBabysitter = await Babysitter.findByIdAndUpdate(
+      id,
+      { accepte: 'acceptée' },
+      { new: true } 
+    );
+
+    // Check if the babysitter was found and updated
+    if (!updatedBabysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+
+    // Respond with the updated babysitter data
+    res.status(200).json({ message: 'Babysitter accepted successfully', babysitter: updatedBabysitter });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while accepting the babysitter' });
+  }
+};
+
 
 
 exports.getProfilePic = async (req, res) => {
@@ -104,6 +129,30 @@ exports.getProfilePicById = async (req, res) => {
     const profilePicContentType = babysitter.profilePic.contentType;
 
     res.status(200).send({ profilePicData, profilePicContentType });
+  } catch (error) {
+    console.error(error);
+    console.log(error);
+    res.status(500).send({ message: 'An error occurred while retrieving the profile picture.' });
+  }
+};
+
+
+exports.getCVById = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const babysitter = await Babysitter.findById(id);
+
+    if (!babysitter) {
+      return res.status(404).send({ message: 'Profile picture not found.' });
+    }
+
+    const cv = babysitter.file.data
+      ? babysitter.file.data.toString('base64')
+      : null;
+    const profilePicContentType = babysitter.file.contentType;
+
+    res.status(200).send({ cv, profilePicContentType });
   } catch (error) {
     console.error(error);
     console.log(error);
@@ -239,6 +288,27 @@ exports.updateFCMToken = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'An error occurred while updating the FCM token.' });
+  }
+};
+
+exports.deleteBabysitter = async (req, res) => {
+  try {
+    // Extract the babysitter ID from the URL parameters
+    const { id } = req.params;
+
+    // Find the babysitter by ID and delete it from the database
+    const deletedBabysitter = await Babysitter.findByIdAndDelete(id);
+
+    // Check if the babysitter was found and deleted
+    if (!deletedBabysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+
+    // Respond with a success message
+    res.status(200).json({ message: 'Babysitter deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while deleting the babysitter' });
   }
 };
 
