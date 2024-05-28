@@ -24,3 +24,33 @@ exports.getAdminInfo = async (req, res) => {
   }
 };
 
+
+exports.addNotification = async (req, res) => {
+  try {
+    const { nom, prenom } = req.body;
+    const admin = await Admin.findOne({ email: 'admin@gmail.com' });
+
+    if (admin) {
+      admin.notifications.push({ nom, prenom });
+      await admin.save();
+      res.status(201).json({ message: 'Notification ajoutée avec succès' });
+    } else {
+      res.status(404).json({ message: 'Administrateur non trouvé' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getNotifications = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ email: 'admin@gmail.com' });
+    if (admin) {
+      res.status(200).json(admin.notifications);
+    } else {
+      res.status(404).json({ message: 'Administrateur non trouvé' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
