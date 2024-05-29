@@ -4,6 +4,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Babysitter = require('../models/babysitter');
 const mongoose = require('mongoose');
+var admin = require("firebase-admin");
+var fcm = require("fcm-notification");
+var serviceAccount = require("../config/push-notification-key.json");
+const certPath = admin.credential.cert(serviceAccount);
+var FCM = new fcm(certPath);
 
 
 
@@ -78,8 +83,11 @@ exports.login = async (req, res) => {
 };
 
 exports.addRendezVous = async (req, res) => {
+  const { date, nomParent, heure_debut, heure_fin, fcm_token } = req.body;
 
-  const { date, nomParent , heure_debut,  heure_fin} = req.body;
+  if (!fcm_token) {
+    return res.status(400).json({ message: 'FCM token is required' });
+  }
 
   try {
     const parent = await Parent.findById(req.params.id);
@@ -102,6 +110,27 @@ exports.addRendezVous = async (req, res) => {
     babysitter.rendezVous.push(rendezVous);
     await babysitter.save();
 
+    const message = {
+      notification: {
+        title: "test",
+        body: 'test',
+      },
+      data: {
+        orderId: '123456',
+        orderDate: "2024-05-29",
+      },
+      token: fcm_token,
+    };
+
+    FCM.send(message, function (err, resp) {
+      if (err) {
+        console.error('Error sending notification:', err);
+        return res.status(500).send({ message: err.message });
+      } else {
+        console.log("Notification Sent");
+      }
+    });
+
     res.status(201).json(babysitter);
   } catch (error) {
     console.error(error);
@@ -112,5 +141,6 @@ exports.addRendezVous = async (req, res) => {
     }
   }
 };
+
 
 
