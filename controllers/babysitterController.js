@@ -315,3 +315,61 @@ exports.deleteBabysitter = async (req, res) => {
   }
 };
 
+exports.updateBabysitter = async (req, res) => {
+  try {
+    const { token } = req.params; // Assume the babysitter ID is passed as a URL parameter
+    const { nom, prenom, email, password, phone, description } = req.body;
+
+    // Find the babysitter by ID
+    const babysitter = await Babysitter.findOne({token:token});
+
+    if (!babysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+
+    // Update fields if they are provided in the request
+    if (nom) babysitter.nom = nom;
+    if (prenom) babysitter.prenom = prenom;
+    if (email) babysitter.email = email;
+    if (phone) babysitter.phone = phone;
+    if (description) babysitter.description = description;
+
+    // Update password if it is provided and not empty
+    if (password) {
+      const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+      babysitter.password = hashedPassword
+    }
+
+    // Check if file is present
+    if (req.file) {
+      babysitter.file.data = req.file.buffer; // Store file as Buffer
+      babysitter.file.contentType = req.file.mimetype; // Store file MIME type
+    }
+
+    // Save the updated babysitter in the database
+    await babysitter.save();
+
+    res.status(200).json({ message: 'Babysitter updated successfully', babysitter });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while updating the babysitter' });
+  }
+};
+
+exports.getBabysitterById = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const babysitter = await Babysitter.findOne({token:token});
+
+    if (!babysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+
+    res.status(200).json(babysitter);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while retrieving the babysitter' });
+  }
+};

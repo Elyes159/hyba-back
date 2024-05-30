@@ -35,6 +35,14 @@ router.get('/rendezVous/:token',babysitterController.getRendezVousByBabysitterTo
 router.get('/rendezVousId/:id',babysitterController.getRendezVousByBabysitterId)
 router.post('/updateFCMToken',babysitterController.updateFCMToken)
 
+router.put('/update/:token', upload.single('file'), babysitterController.updateBabysitter);
+
+
+router.get('/:token', babysitterController.getBabysitterById);
+
+
+
+
 router.delete('/Delete/:id',babysitterController.deleteBabysitter)
 
 
