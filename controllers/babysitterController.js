@@ -199,7 +199,18 @@ exports.loginBabysitter = async (req, res) => {
 exports.getDemandesEnAttente = async (req, res) => {
   try {
     const demandesEnAttente = await Babysitter.find({
-      accepte: { $in: ['en attente', 'acceptée', 'refusée'] }
+      accepte: { $in: ['en attente'] }
+    });
+    res.status(200).json(demandesEnAttente);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getBabysitters = async (req, res) => {
+  try {
+    const demandesEnAttente = await Babysitter.find({
+      accepte: { $in: ['en attente','acceptée','refusée'] }
     });
     res.status(200).json(demandesEnAttente);
   } catch (error) {

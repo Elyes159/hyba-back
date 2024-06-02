@@ -23,6 +23,8 @@ router.post('/login', babysitterController.loginBabysitter);
 
 
 router.get('/demandes/en-attente', babysitterController.getDemandesEnAttente);
+router.get('/babysitters-all', babysitterController.getBabysitters);
+
 
 
 router.get('/demandes/acceptees', babysitterController.getDemandesAcceptees);

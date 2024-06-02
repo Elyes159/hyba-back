@@ -38,6 +38,8 @@ exports.getAllParents = async (req, res) => {
 };
 
 
+
+
 exports.getParentByToken = async (req, res) => {
   try {
     const parent = await Parent.findOne({token : req.params.token});
@@ -139,6 +141,27 @@ exports.addRendezVous = async (req, res) => {
     } else {
       res.status(500).json({ message: 'Internal server error' });
     }
+  }
+};
+
+exports.deleteParent = async (req, res) => {
+  try {
+    // Extract the babysitter ID from the URL parameters
+    const { id } = req.params;
+
+    // Find the babysitter by ID and delete it from the database
+    const deletedBabysitter = await Parent.findByIdAndDelete(id);
+
+    // Check if the babysitter was found and deleted
+    if (!deletedBabysitter) {
+      return res.status(404).json({ message: 'Babysitter not found' });
+    }
+
+    // Respond with a success message
+    res.status(200).json({ message: 'Babysitter deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'An error occurred while deleting the babysitter' });
   }
 };
 

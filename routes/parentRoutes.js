@@ -16,6 +16,7 @@ router.get('/:token', parentController.getParentByToken);
 
 
 router.post('/:id/:idbaby/rendezvous', parentController.addRendezVous);
+router.delete('/:id',parentController.deleteParent)
 
 
 
